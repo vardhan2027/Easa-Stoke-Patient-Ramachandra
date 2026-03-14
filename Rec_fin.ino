@@ -5,16 +5,20 @@
 #include <Preferences.h>
 
 Servo servo1;   // GPIO 3
-Servo servo2;   // GPIO 2
+
+// Linear Actuator
+#define IN1 8
+#define IN2 7  
+
+int motorSpeed = 255; // Actuator Speed
 
 Preferences prefs;
 
-int x = 0, y = 0;
+int x = 0;
 
 // Save values to flash
 void saveValues() {
   prefs.putInt("servo1", x);
-  prefs.putInt("servo2", y);
 }
 
 // ESP-NOW receive callback
@@ -37,6 +41,8 @@ void onReceive(const esp_now_recv_info *info,
         x += 20;
         servo1.write(x);
         saveValues();
+        Serial.print("Servo1: ");
+        Serial.print(x);
       }
       break;
 
@@ -45,23 +51,21 @@ void onReceive(const esp_now_recv_info *info,
         x -= 20;
         servo1.write(x);
         saveValues();
+         Serial.print("Servo1: ");
+        Serial.print(x);
       }
       break;
 
     case 3:
-      if (y < 180) {
-        y += 20;
-        servo2.write(y);
-        saveValues();
-      }
+      digitalWrite(IN2, LOW);
+      digitalWrite(IN1, motorSpeed);
+      Serial.println("Hand Grab");
       break;
 
     case 4:
-      if (y > 0) {
-        y -= 20;
-        servo2.write(y);
-        saveValues();
-      }
+      digitalWrite(IN2, motorSpeed);
+      digitalWrite(IN1, LOW);
+      Serial.println("Hand Release");
       break;
 
     default:
@@ -69,10 +73,6 @@ void onReceive(const esp_now_recv_info *info,
       break;
   }
 
-  Serial.print("Servo1: ");
-  Serial.print(x);
-  Serial.print(" | Servo2: ");
-  Serial.println(y);
 }
 
 void setup() {
@@ -93,18 +93,18 @@ void setup() {
   esp_now_register_recv_cb(onReceive);
 
   servo1.attach(3);
-  servo2.attach(2);
+
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
 
   // Open NVS namespace
   prefs.begin("servoData", false);
 
   // Read stored values
   x = prefs.getInt("servo1", 0);  // default 0
-  y = prefs.getInt("servo2", 0);
 
   // Move servos to last position
   servo1.write(x);
-  servo2.write(y);
 
   Serial.println("✅ Receiver ready, servos restored");
 }
