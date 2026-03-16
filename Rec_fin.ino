@@ -7,7 +7,7 @@
 Servo servo1;   // GPIO 3
 
 // Linear Actuator
-#define IN1 8
+#define IN1 6
 #define IN2 7  
 
 int motorSpeed = 255; // Actuator Speed
@@ -38,7 +38,7 @@ void onReceive(const esp_now_recv_info *info,
 
     case 1:
       if (x < 180) {
-        x += 20;
+        x += 10;
         servo1.write(x);
         saveValues();
         Serial.print("Servo1: ");
@@ -48,7 +48,7 @@ void onReceive(const esp_now_recv_info *info,
 
     case 2:
       if (x > 0) {
-        x -= 20;
+        x -= 10;
         servo1.write(x);
         saveValues();
          Serial.print("Servo1: ");
